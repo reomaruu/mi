@@ -1,0 +1,24 @@
+name: Run Google Sites fix
+
+on:
+  push:
+    paths:
+      - .github/workflows/run-google-sites-fix.yml
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 .github/scripts/fix_google_sites.py
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- '*.html'
+          if ! git diff --cached --quiet; then
+            git commit -m "Fix Google Sites navigation and Japanese wrapping"
+            git push
+          fi
