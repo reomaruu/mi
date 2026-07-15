@@ -1,0 +1,137 @@
+name: Fix Google Sites navigation and Japanese wrapping
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/fix-google-sites-navigation-and-wrapping.yml
+
+permissions:
+  contents: write
+
+jobs:
+  fix-google-sites:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Fix internal links and Japanese text wrapping
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          site_pages = {
+              "index.html": "https://sites.google.com/view/mi-lab/mi-lab",
+              "p.html": "https://sites.google.com/view/mi-lab/programming",
+              "s.html": "https://sites.google.com/view/mi-lab/sns",
+              "d.html": "https://sites.google.com/view/mi-lab/movie",
+              "de.html": "https://sites.google.com/view/mi-lab/design",
+          }
+
+          wrap_css = r'''
+
+        /* 日本語の紹介文を自然な位置で折り返す */
+        .hero p,
+        section p,
+        .group-card p,
+        .activity-card p,
+        .portfolio-card p,
+        .contact-card p,
+        .info-box p {
+            white-space: normal;
+            line-break: strict;
+            word-break: normal;
+            word-break: auto-phrase;
+            overflow-wrap: break-word;
+            text-wrap: pretty;
+        }
+'''
+          marker = "/* 日本語の紹介文を自然な位置で折り返す */"
+
+          # GitHub Pages・相対リンク・以前のGoogle Sitesリンクを、Google Sitesの正規URLへ統一する。
+          aliases = {
+              "index.html": site_pages["index.html"],
+              "p.html": site_pages["p.html"],
+              "s.html": site_pages["s.html"],
+              "d.html": site_pages["d.html"],
+              "de.html": site_pages["de.html"],
+              "https://reomaruu.github.io/mi/index.html": site_pages["index.html"],
+              "https://reomaruu.github.io/mi/p.html": site_pages["p.html"],
+              "https://reomaruu.github.io/mi/s.html": site_pages["s.html"],
+              "https://reomaruu.github.io/mi/d.html": site_pages["d.html"],
+              "https://reomaruu.github.io/mi/de.html": site_pages["de.html"],
+              "https://sites.google.com/view/mi-lab/home": site_pages["index.html"],
+          }
+
+          internal_url_pattern = re.compile(
+              r'https://sites\.google\.com/view/mi-lab/(?:mi-lab|programming|sns|movie|design)(?:#[^"\']*)?',
+              re.IGNORECASE,
+          )
+          target_pattern = re.compile(r'\btarget\s*=\s*(["\'])[^"\']*\1', re.IGNORECASE)
+          anchor_pattern = re.compile(r'<a\b[^>]*>', re.IGNORECASE)
+
+          def fix_internal_anchor(match: re.Match[str]) -> str:
+              tag = match.group(0)
+              href_match = re.search(r'\bhref\s*=\s*(["\'])([^"\']+)\1', tag, re.IGNORECASE)
+              if not href_match or not internal_url_pattern.fullmatch(href_match.group(2)):
+                  return tag
+              # Google Sitesは埋め込みが多重フレームになるため、直上の親フレームへ移動する。
+              if target_pattern.search(tag):
+                  return target_pattern.sub('target="_parent"', tag, count=1)
+              return tag[:-1].rstrip() + ' target="_parent">'
+
+          changed = []
+          for path in sorted(Path('.').glob('*.html')):
+              original = path.read_text(encoding='utf-8')
+              updated = original
+
+              for old, new in aliases.items():
+                  # URL末尾のアンカーは維持する。
+                  updated = re.sub(
+                      rf'(?P<quote>["\']){re.escape(old)}(?P<fragment>#[^"\']*)?(?P=quote)',
+                      lambda m, new=new: f'{m.group("quote")}{new}{m.group("fragment") or ""}{m.group("quote")}',
+                      updated,
+                  )
+
+              updated = anchor_pattern.sub(fix_internal_anchor, updated)
+
+              # JavaScript経由の内部ページ移動も親フレームへ統一する。
+              updated = re.sub(
+                  r'(window\.open\s*\(\s*[^,]+,\s*["\'])(?:_self|_top|_blank)(["\'])',
+                  r'\1_parent\2',
+                  updated,
+                  flags=re.IGNORECASE,
+              )
+
+              # ホーム紹介文の固定改行を削除し、幅に応じた自然な折り返しにする。
+              updated = re.sub(
+                  r'(<p\b[^>]*id=["\']hero-desc["\'][^>]*>.*?)<br\s*/?>(.*?</p>)',
+                  r'\1 \2',
+                  updated,
+                  flags=re.IGNORECASE | re.DOTALL,
+              )
+
+              if marker not in updated:
+                  updated = updated.replace('</style>', wrap_css + '\n    </style>', 1)
+
+              if updated != original:
+                  path.write_text(updated, encoding='utf-8')
+                  changed.append(path.name)
+
+          print('Updated:', ', '.join(changed) if changed else 'no files')
+          PY
+
+      - name: Commit fixes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- '*.html'
+          if git diff --cached --quiet; then
+            echo "No changes were needed."
+          else
+            git commit -m "Fix Google Sites navigation and Japanese wrapping"
+            git push
+          fi
