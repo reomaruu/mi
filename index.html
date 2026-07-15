@@ -396,12 +396,30 @@
             transform: scale(1.1) rotate(90deg); /* 少し大きくなりながら90度回転 */
             box-shadow: 0 6px 15px rgba(212, 163, 115, 0.3);
         }
+    
+
+        /* 日本語の紹介文を自然な位置で折り返す */
+        .hero p,
+        section p,
+        .group-card p,
+        .activity-card p,
+        .portfolio-card p,
+        .contact-card p,
+        .info-box p {
+            white-space: normal;
+            line-break: strict;
+            word-break: normal;
+            word-break: auto-phrase;
+            overflow-wrap: break-word;
+            text-wrap: pretty;
+        }
+
     </style>
 </head>
 <body>
 
 <header>
-        <a href="index.html" target="_self" class="header-logo">Mi-lab</a>
+        <a href="https://sites.google.com/view/mi-lab/mi-lab" target="_parent" class="header-logo">Mi-lab</a>
         
         <input type="checkbox" id="menu-toggle">
         <label for="menu-toggle" class="menu-btn" aria-label="メニューを開く">
@@ -420,10 +438,10 @@
                 <li><a style="cursor: pointer;" role="button" onclick="handleNavClick('contact')">お問い合わせ</a></li>
                 
                 <li><span class="nav-title">各班の活動詳細</span></li>
-                <li><a href="p.html" target="_self" rel="noopener" onclick="handleNavClick(null)">💻 プログラミング班</a></li>
-                <li><a href="s.html" target="_self" rel="noopener" onclick="handleNavClick(null)">📱 SNS班</a></li>
-                <li><a href="d.html" target="_self" rel="noopener" onclick="handleNavClick(null)">🎥 動画制作班</a></li>
-                <li><a href="de.html" target="_self" rel="noopener" onclick="handleNavClick(null)">🎨 デザイン班</a></li>
+                <li><a href="https://sites.google.com/view/mi-lab/programming" target="_parent" rel="noopener" onclick="handleNavClick(null)">💻 プログラミング班</a></li>
+                <li><a href="https://sites.google.com/view/mi-lab/sns" target="_parent" rel="noopener" onclick="handleNavClick(null)">📱 SNS班</a></li>
+                <li><a href="https://sites.google.com/view/mi-lab/movie" target="_parent" rel="noopener" onclick="handleNavClick(null)">🎥 動画制作班</a></li>
+                <li><a href="https://sites.google.com/view/mi-lab/design" target="_parent" rel="noopener" onclick="handleNavClick(null)">🎨 デザイン班</a></li>
             </ul>
         </nav>
         <!-- メニュー中身（ここまで） -->
@@ -478,7 +496,7 @@
 <div id="view-portal">
     <div class="hero">
         <h1 id="hero-title"><strong>Mi-lab</strong></h1>
-        <p id="hero-desc">技術と表現の境界線を越え、アイデアを形にするクリエイティブ・ラボ。<br>4つの個性がシンクロし、新しい価値を創造します。</p>
+        <p id="hero-desc">技術と表現の境界線を越え、アイデアを形にするクリエイティブ・ラボ。 4つの個性がシンクロし、新しい価値を創造します。</p>
     </div>
 
     <section id="Mi-Lab">
@@ -497,7 +515,7 @@
         <p>カードを選択すると、それぞれの班の詳しい活動内容や実績ページへスマートに遷移します。</p>
 <div class="group-selector-grid">
             
-            <a href="p.html" target="_self" class="group-card" style="text-decoration: none; color: inherit; display: block;">
+            <a href="https://sites.google.com/view/mi-lab/programming" target="_parent" class="group-card" style="text-decoration: none; color: inherit; display: block;">
                 <div>
                     <div class="group-card-header">
                         <div class="group-icon-wrapper">
@@ -510,7 +528,7 @@
                 <span class="more-link">詳細ページを開く →</span>
             </a>
 
-            <a href="s.html" target="_self" class="group-card" style="text-decoration: none; color: inherit; display: block;">
+            <a href="https://sites.google.com/view/mi-lab/sns" target="_parent" class="group-card" style="text-decoration: none; color: inherit; display: block;">
                 <div>
                     <div class="group-card-header">
                         <div class="group-icon-wrapper">
@@ -523,7 +541,7 @@
                 <span class="more-link">詳細ページを開く →</span>
             </a>
 
-            <a href="d.html" target="_self" class="group-card" style="text-decoration: none; color: inherit; display: block;">
+            <a href="https://sites.google.com/view/mi-lab/movie" target="_parent" class="group-card" style="text-decoration: none; color: inherit; display: block;">
                 <div>
                     <div class="group-card-header">
                         <div class="group-icon-wrapper">
@@ -536,7 +554,7 @@
                 <span class="more-link">詳細ページを開く →</span>
             </a>
 
-            <a href="de.html" target="_self" class="group-card" style="text-decoration: none; color: inherit; display: block;">
+            <a href="https://sites.google.com/view/mi-lab/design" target="_parent" class="group-card" style="text-decoration: none; color: inherit; display: block;">
                 <div>
                     <div class="group-card-header">
                         <div class="group-icon-wrapper">
@@ -641,11 +659,11 @@
     // ※「mi-lab」の部分を、公開されたGoogle サイトのアドレスへ書き換えてください。
     // ==========================================
     const GROUP_PAGES = {
-        portal: "index.html", 
-        programming: "p.html",       
-        sns: "s.html",                     
-        movie: "d.html",                 
-        design: "de.html"                
+        portal: "https://sites.google.com/view/mi-lab/mi-lab", 
+        programming: "https://sites.google.com/view/mi-lab/programming",       
+        sns: "https://sites.google.com/view/mi-lab/sns",                     
+        movie: "https://sites.google.com/view/mi-lab/movie",                 
+        design: "https://sites.google.com/view/mi-lab/design"                
     };
 
     // スプレッドシート（GAS）のAPI連携URL
@@ -671,13 +689,13 @@
             if (isLocal) {
                 console.warn("⚠️ Google Sitesの公開URLが未設定のため、ローカル用HTMLファイルで代替遷移します。");
                 const localFallbacks = {
-                    portal: "index.html",
+                    portal: "https://sites.google.com/view/mi-lab/mi-lab",
                     programming: "programing.html",
                     sns: "SNS.html",
                     movie: "movie.html",
                     design: "design.html"
                 };
-                window.location.href = localFallbacks[groupId] || "index.html";
+                window.location.href = localFallbacks[groupId] || "https://sites.google.com/view/mi-lab/mi-lab";
             } else {
                 // セキュリティ制限によるalert()クラッシュを回避するため、独自の安全トースト警告を表示します
                 showUrlErrorAlert(groupId);
@@ -688,7 +706,7 @@
         try {
             // Google Sitesの本番公開環境であれば、_topを指定して親ウインドウをスムーズに切り替え
             if (window.self !== window.top) {
-                window.open(url, '_self');
+                window.open(url, '_parent');
             } else {
                 window.location.href = url;
             }

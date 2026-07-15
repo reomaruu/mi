@@ -363,6 +363,24 @@
             color: var(--accent);
             transform: translateX(5px); /* ホバー時に少し右にズレる演出 */
         }
+    
+
+        /* 日本語の紹介文を自然な位置で折り返す */
+        .hero p,
+        section p,
+        .group-card p,
+        .activity-card p,
+        .portfolio-card p,
+        .contact-card p,
+        .info-box p {
+            white-space: normal;
+            line-break: strict;
+            word-break: normal;
+            word-break: auto-phrase;
+            overflow-wrap: break-word;
+            text-wrap: pretty;
+        }
+
     </style>
 </head>
 <body>
@@ -375,22 +393,22 @@
     </label>
 
     <header>
-        <a href="index.html" target="_self" class="header-logo">Mi-lab</a>
+        <a href="https://sites.google.com/view/mi-lab/mi-lab" target="_parent" class="header-logo">Mi-lab</a>
     </header>
 
     <nav>
         <ul>
-            <li><a href="index.html#Mi-Lab" target="_self" rel="noopener" onclick="handleNavClick(null)">Mi-labとは？</a></li>
-            <li><a href="index.html#youtube-feed" target="_self">YouTube情報</a></li>
-            <li><a href="index.html#group" target="_self">各班紹介</a></li>
-            <li><a href="index.html#portfolio" target="_self">活動実績</a></li>
-            <li><a href="index.html#contact" target="_self" rel="noopener" onclick="handleNavClick(null)">お問い合わせ</a></li>
+            <li><a href="https://sites.google.com/view/mi-lab/mi-lab#Mi-Lab" target="_parent" rel="noopener" onclick="handleNavClick(null)">Mi-labとは？</a></li>
+            <li><a href="https://sites.google.com/view/mi-lab/mi-lab#youtube-feed" target="_parent">YouTube情報</a></li>
+            <li><a href="https://sites.google.com/view/mi-lab/mi-lab#group" target="_parent">各班紹介</a></li>
+            <li><a href="https://sites.google.com/view/mi-lab/mi-lab#portfolio" target="_parent">活動実績</a></li>
+            <li><a href="https://sites.google.com/view/mi-lab/mi-lab#contact" target="_parent" rel="noopener" onclick="handleNavClick(null)">お問い合わせ</a></li>
             
             <li><span class="nav-title">各班の活動詳細</span></li>
-            <li><a href="p.html" target="_self" rel="noopener" onclick="handleNavClick(null)">💻 プログラミング班</a></li>
-            <li><a href="s.html" target="_self" rel="noopener" onclick="handleNavClick(null)">📱 SNS班</a></li>
-            <li><a href="d.html" target="_self" rel="noopener" onclick="handleNavClick(null)">🎥 動画制作班</a></li>
-            <li><a href="de.html" target="_self" rel="noopener" onclick="handleNavClick(null)">🎨 デザイン班</a></li>
+            <li><a href="https://sites.google.com/view/mi-lab/programming" target="_parent" rel="noopener" onclick="handleNavClick(null)">💻 プログラミング班</a></li>
+            <li><a href="https://sites.google.com/view/mi-lab/sns" target="_parent" rel="noopener" onclick="handleNavClick(null)">📱 SNS班</a></li>
+            <li><a href="https://sites.google.com/view/mi-lab/movie" target="_parent" rel="noopener" onclick="handleNavClick(null)">🎥 動画制作班</a></li>
+            <li><a href="https://sites.google.com/view/mi-lab/design" target="_parent" rel="noopener" onclick="handleNavClick(null)">🎨 デザイン班</a></li>
         </ul>
     </nav>
 
@@ -449,24 +467,24 @@
         </div>
 
         <div style="text-align: center; margin-top: 40px;">
-            <a href="index.html" target="_self" rel="noopener" onclick="handleNavClick(null)" class="btn-subtle">← ポータルトップへ戻る</a>
+            <a href="https://sites.google.com/view/mi-lab/mi-lab" target="_parent" rel="noopener" onclick="handleNavClick(null)" class="btn-subtle">← ポータルトップへ戻る</a>
         </div>
 
         <div class="group-nav-bottom">
-            <a href="p.html" target="_self" rel="noopener" onclick="handleNavClick(null)">💻 プログラミング</a>
-            <a href="s.html" target="_self" rel="noopener" onclick="handleNavClick(null)">📱 SNS</a>
-            <a href="d.html" target="_self" rel="noopener" onclick="handleNavClick(null)">🎥 動画制作</a>
-            <a href="de.html" target="_self" rel="noopener" onclick="handleNavClick(null)">🎨 デザイン</a>
+            <a href="https://sites.google.com/view/mi-lab/programming" target="_parent" rel="noopener" onclick="handleNavClick(null)">💻 プログラミング</a>
+            <a href="https://sites.google.com/view/mi-lab/sns" target="_parent" rel="noopener" onclick="handleNavClick(null)">📱 SNS</a>
+            <a href="https://sites.google.com/view/mi-lab/movie" target="_parent" rel="noopener" onclick="handleNavClick(null)">🎥 動画制作</a>
+            <a href="https://sites.google.com/view/mi-lab/design" target="_parent" rel="noopener" onclick="handleNavClick(null)">🎨 デザイン</a>
         </div>
     </section>
 
     <script>
         const GROUP_PAGES = {
-            portal: "index.html", 
-            programming: "p.html",       
-            sns: "s.html",                     
-            movie: "d.html",                 
-            design: "de.html"                
+            portal: "https://sites.google.com/view/mi-lab/mi-lab", 
+            programming: "https://sites.google.com/view/mi-lab/programming",       
+            sns: "https://sites.google.com/view/mi-lab/sns",                     
+            movie: "https://sites.google.com/view/mi-lab/movie",                 
+            design: "https://sites.google.com/view/mi-lab/design"                
         };
 
         const GAS_API_URL = "https://script.google.com/macros/s/AKfycbwiQTx1sAB2Yju2980LYDLzZEz36JduMMGnU8tsMk2x8vFSSw3P-bmsjQapLm7oXCG1/exec";
@@ -475,7 +493,7 @@
             const url = GROUP_PAGES[key];
             if(!url) return;
             try {
-                window.open(url, '_self');
+                window.open(url, '_parent');
             } catch (e) {
                 window.location.href = url;
             }
