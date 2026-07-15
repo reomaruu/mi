@@ -1,0 +1,118 @@
+name: Fix Pages links and Japanese text wrapping
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/fix-pages-links-and-wrapping.yml
+
+permissions:
+  contents: write
+
+jobs:
+  fix-pages:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Fix links and paragraph wrapping
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          base = "https://reomaruu.github.io/mi/"
+          page_urls = {
+              "index.html": base + "index.html",
+              "p.html": base + "p.html",
+              "s.html": base + "s.html",
+              "d.html": base + "d.html",
+              "de.html": base + "de.html",
+          }
+
+          wrap_css = r'''
+
+        /* 日本語の紹介文を語句の途中で不自然に分割しにくくする */
+        .hero p,
+        section p,
+        .group-card p,
+        .activity-card p,
+        .portfolio-card p,
+        .contact-card p,
+        .info-box p {
+            white-space: normal;
+            line-break: strict;
+            word-break: normal;
+            word-break: auto-phrase;
+            overflow-wrap: break-word;
+            text-wrap: pretty;
+        }
+'''
+
+          marker = "/* 日本語の紹介文を語句の途中で不自然に分割しにくくする */"
+          changed = []
+
+          for path in sorted(Path('.').glob('*.html')):
+              original = path.read_text(encoding='utf-8')
+              updated = original
+
+              # srcdocやGoogle Sitesの中でも基準URLに左右されないよう、
+              # 内部ページへのリンクとJavaScript上のページURLを絶対URLへ固定する。
+              for local, absolute in page_urls.items():
+                  updated = re.sub(
+                      rf'(?P<quote>["\']){re.escape(local)}(?P<fragment>#[^"\']*)?(?P=quote)',
+                      lambda m, absolute=absolute: f'{m.group("quote")}{absolute}{m.group("fragment") or ""}{m.group("quote")}',
+                      updated,
+                  )
+
+              # 既存の内部Google Sitesリンクが残っている場合もGitHub Pagesへ統一する。
+              replacements = {
+                  "https://sites.google.com/view/mi-lab/mi-lab": page_urls["index.html"],
+                  "https://sites.google.com/view/mi-lab/home": page_urls["index.html"],
+                  "https://sites.google.com/view/mi-lab/programming": page_urls["p.html"],
+                  "https://sites.google.com/view/mi-lab/sns": page_urls["s.html"],
+                  "https://sites.google.com/view/mi-lab/movie": page_urls["d.html"],
+                  "https://sites.google.com/view/mi-lab/design": page_urls["de.html"],
+              }
+              for old, new in replacements.items():
+                  updated = updated.replace(old, new)
+
+              # GitHub Pages内の移動は現在の埋め込みフレームで行う。
+              updated = re.sub(
+                  r'(<a\b[^>]*\bhref\s*=\s*["\']https://reomaruu\.github\.io/mi/(?:index|p|s|d|de)\.html(?:#[^"\']*)?["\'][^>]*?)\btarget\s*=\s*["\'][^"\']*["\']',
+                  r'\1target="_self"',
+                  updated,
+                  flags=re.IGNORECASE,
+              )
+
+              # ホームのキャッチコピーに入っていた固定改行を削除し、画面幅に応じて自然に折り返す。
+              updated = re.sub(
+                  r'(<p\b[^>]*id=["\']hero-desc["\'][^>]*>.*?)<br\s*/?>(.*?</p>)',
+                  r'\1 \2',
+                  updated,
+                  flags=re.IGNORECASE | re.DOTALL,
+              )
+
+              if marker not in updated:
+                  updated = updated.replace('</style>', wrap_css + '\n    </style>', 1)
+
+              if updated != original:
+                  path.write_text(updated, encoding='utf-8')
+                  changed.append(path.name)
+
+          print('Updated:', ', '.join(changed) if changed else 'no files')
+          PY
+
+      - name: Commit fixes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- '*.html'
+          if git diff --cached --quiet; then
+            echo "No changes were needed."
+          else
+            git commit -m "Fix GitHub Pages navigation and Japanese wrapping"
+            git push
+          fi
