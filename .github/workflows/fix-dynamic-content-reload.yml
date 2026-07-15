@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - .github/workflows/fix-dynamic-content-reload.yml
+      - .github/run-fix-dynamic-content-reload
 
 permissions:
   contents: write
@@ -57,5 +57,3 @@ jobs:
           git add -- '*.html'
           git commit -m "Reinitialize dynamic content after internal navigation"
           git push
-
-# trigger: 2026-07-15
