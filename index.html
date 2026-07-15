@@ -146,7 +146,7 @@
         }
 
         /* ==========================================
-           修正：ヘッダー（ロゴのみ）
+           ヘッダー & ナビゲーション
            ========================================== */
         header {
             background-color: var(--header-bg);
@@ -157,7 +157,7 @@
             z-index: 1000;
             height: 60px;
             display: flex;
-            justify-content: flex-start; /* 左寄せ */
+            justify-content: space-between;
             align-items: center;
             padding: 0 20px;
             backdrop-filter: blur(8px);
@@ -175,10 +175,8 @@
             letter-spacing: 1px;
             transition: all 0.3s ease;
         }
-        .header-logo:hover { color: var(--accent); text-shadow: var(--accent-glow); }
 
-        /* ヘッダーがあるための余白調整（これは残します） */
-        .hero { padding-top: 140px !important; }
+        .header-logo:hover { color: var(--accent); text-shadow: var(--accent-glow); }
 
         #menu-toggle { display: none; }
 
@@ -367,13 +365,112 @@
         .scroll-to-top:hover { background-color: var(--accent); color: var(--theme-btn-hover-text); border-color: var(--accent); transform: translateY(-3px); box-shadow: var(--card-shadow-hover); }
         .scroll-to-top.show { opacity: 1 !important; visibility: visible !important; }
         .scroll-to-top svg { width: 24px !important; height: 24px !important; min-width: 24px !important; min-height: 24px !important; max-width: 24px !important; max-height: 24px !important; stroke: currentColor !important; stroke-width: 2.5 !important; fill: none !important; flex-shrink: 0 !important; display: block !important; margin: 0 auto !important; padding: 0 !important; }
+        /* ==========================================
+                お洒落な閉じる（バツ）ボタン
+        ========================================== */
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 44px;
+            height: 44px;
+            background-color: var(--card-bg, #ffffff);
+            border: 1px solid var(--section-border, #e0dbcd);
+            border-radius: 50%;
+            color: var(--text-color, #333333);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            z-index: 10;
+            padding: 0;
+        }
+
+        /* カーソルを乗せたときのアニメーション */
+        .close-btn:hover {
+            background-color: var(--accent, #d4a373);
+            color: #ffffff;
+            border-color: var(--accent, #d4a373);
+            transform: scale(1.1) rotate(90deg); /* 少し大きくなりながら90度回転 */
+            box-shadow: 0 6px 15px rgba(212, 163, 115, 0.3);
+        }
     </style>
 </head>
 <body>
 
 <header>
         <a href="https://sites.google.com/view/mi-lab/mi-lab" target="_blank" class="header-logo">Mi-lab</a>
-</header>
+        
+        <input type="checkbox" id="menu-toggle">
+        <label for="menu-toggle" class="menu-btn" aria-label="メニューを開く">
+            <span></span>
+        </label>
+        
+        <label for="menu-toggle" class="menu-backdrop"></label>
+
+        <!-- メニュー中身（ここから丸ごと上書きしてください） -->
+        <nav>
+            <ul>
+                <li><a style="cursor: pointer;" role="button" onclick="handleNavClick('Mi-Lab')">Mi-labとは？</a></li>
+                <li><a style="cursor: pointer;" role="button" onclick="handleNavClick('youtube-feed')">YouTube情報</a></li>
+                <li><a style="cursor: pointer;" role="button" onclick="handleNavClick('group')">各班紹介</a></li>
+                <li><a style="cursor: pointer;" role="button" onclick="handleNavClick('portfolio')">活動実績</a></li>
+                <li><a style="cursor: pointer;" role="button" onclick="handleNavClick('contact')">お問い合わせ</a></li>
+                
+                <li><span class="nav-title">各班の活動詳細</span></li>
+                <li><a href="https://sites.google.com/view/mi-lab/programming" target="_blank" rel="noopener" onclick="handleNavClick(null)">💻 プログラミング班</a></li>
+                <li><a href="https://sites.google.com/view/mi-lab/sns" target="_blank" rel="noopener" onclick="handleNavClick(null)">📱 SNS班</a></li>
+                <li><a href="https://sites.google.com/view/mi-lab/movie" target="_blank" rel="noopener" onclick="handleNavClick(null)">🎥 動画制作班</a></li>
+                <li><a href="https://sites.google.com/view/mi-lab/design" target="_blank" rel="noopener" onclick="handleNavClick(null)">🎨 デザイン班</a></li>
+            </ul>
+        </nav>
+        <!-- メニュー中身（ここまで） -->
+
+        <script>
+        function handleNavClick(targetId) {
+            // 1. スムーズスクロールを精密に実行
+            if (targetId) {
+                const element = document.getElementById(targetId);
+                if (element) {
+                    // ヘッダーの高さ（60px）を考慮して、ターゲットの絶対位置を正確に計算します
+                    const headerHeight = 60; 
+                    const elementPosition = element.getBoundingClientRect().top;
+                    const offsetPosition = elementPosition + window.pageYOffset - headerHeight;
+
+                    // 親画面を巻き込まず、このページ内だけをピタッと綺麗にスクロールさせます
+                    window.scrollTo({
+                        top: offsetPosition,
+                        behavior: 'smooth'
+                    });
+                }
+            }
+            
+            // 2. メニューのチェックボックスを確実にオフ（閉じる）にする
+            const toggle = document.getElementById('menu-toggle');
+            if (toggle) toggle.checked = false;
+            
+            // 3. ヘッダーやボタンの表示を最前面にリセット
+            setTimeout(() => {
+                document.activeElement.blur();
+                
+                const header = document.querySelector('header');
+                if (header) {
+                    header.style.display = 'flex';
+                    header.style.zIndex = '1000';
+                    header.style.opacity = '1';
+                }
+                
+                const menuBtnSpan = document.querySelector('.menu-btn span');
+                if (menuBtnSpan) {
+                    menuBtnSpan.style.backgroundColor = 'var(--accent)';
+                    menuBtnSpan.style.boxShadow = '';
+                }
+            }, 50);
+        }
+        </script>
+    </header>
 
 <!-- ==========================================
      ポータルビューのみ（各班の重複した詳細セクションは安全に完全削除されました）
@@ -482,7 +579,12 @@
      ========================================== -->
 <div class="portfolio-overlay" id="portfolio-overlay">
     <div class="portfolio-modal-container">
-        <button class="close-btn" onclick="closePortfolioDetail()" aria-label="詳細を閉じる">×</button>
+        <button class="close-btn" onclick="closePortfolioDetail()" aria-label="詳細を閉じる">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+</button>
         <div class="portfolio-modal-hero">
             <span id="pf-modal-tag" class="detail-tag">TAG</span>
             <h3 id="pf-modal-title">PROJECT TITLE</h3>
@@ -838,48 +940,20 @@
     portfolioOverlay.addEventListener('click', function(e) { if (e.target === this) closePortfolioDetail(); });
     document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closePortfolioDetail(); });
 
-    // テーマ切り替え
-    function toggleTheme() {
-        const root = document.documentElement;
-        const btnText = document.getElementById('theme-btn-text');
-        const themeIcon = document.getElementById('theme-btn-icon');
-        if (root.classList.contains('theme-cyber')) {
-            root.classList.remove('theme-cyber');
-            if (btnText) btnText.textContent = 'サイバーへ';
-            if (themeIcon) themeIcon.textContent = '⚡';
-            try { localStorage.setItem('mi-lab-theme', 'organic'); } catch (e) {}
-        } else {
-            root.classList.add('theme-cyber');
-            if (btnText) btnText.textContent = 'オーガニックへ';
-            if (themeIcon) themeIcon.textContent = '🍃';
-            try { localStorage.setItem('mi-lab-theme', 'cyber'); } catch (e) {}
-        }
-    }
-
+    // ページ読み込み時に実行する処理（テーマ切り替えを削除し、データ読み込みのみ残す）
     window.addEventListener('DOMContentLoaded', () => {
-        const savedTheme = localStorage.getItem('mi-lab-theme');
-        const root = document.documentElement;
-        const btnText = document.getElementById('theme-btn-text');
-        const themeIcon = document.getElementById('theme-btn-icon');
-        if (savedTheme === 'cyber') {
-            root.classList.add('theme-cyber');
-            if (btnText) btnText.textContent = 'オーガニックへ';
-            if (themeIcon) themeIcon.textContent = '🍃';
-        } else {
-            root.classList.remove('theme-cyber');
-            if (btnText) btnText.textContent = 'サイバーへ';
-            if (themeIcon) themeIcon.textContent = '⚡';
-        }
         loadDynamicContent();
     });
 
+    // ページトップへ戻るボタンの表示/非表示切り替え
     function toggleScrollTopButton() {
         if (!scrollTopBtn) return;
-        const isModalOpen = portfolioOverlay.classList.contains('active');
+        const isModalOpen = portfolioOverlay && portfolioOverlay.classList.contains('active');
         if (window.scrollY > 300 && !isModalOpen) scrollTopBtn.classList.add('show');
         else scrollTopBtn.classList.remove('show');
     }
 
+    // スクロール時のイベント監視
     window.addEventListener('scroll', toggleScrollTopButton);
     if (scrollTopBtn) scrollTopBtn.addEventListener('click', function() { window.scrollTo({ top: 0, behavior: 'smooth' }); });
 </script>
