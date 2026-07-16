@@ -1,0 +1,69 @@
+name: Fix fragment navigation corruption
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/run-fix-fragment-navigation
+
+permissions:
+  contents: write
+
+jobs:
+  fix-navigation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Remove injected scroll script and use URL fragments
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          function_pattern = re.compile(
+              r"\n\s*function addInitialScroll\(html, fragment\) \{.*?\n\s*\}\n(?=\s*async function loadInternalPage)",
+              re.DOTALL,
+          )
+
+          old_navigation = """            let html = await fetchPageHtml(request.file);
+              html = addInitialScroll(html, request.fragment);
+              // 新しい文書として同じ表示枠へ読み込み、ページ固有のJavaScriptを毎回初期化する。
+              const pageBlob = new Blob([html], { type: 'text/html;charset=utf-8' });
+              const pageUrl = URL.createObjectURL(pageBlob);
+              window.location.replace(pageUrl);"""
+
+          new_navigation = """            const html = await fetchPageHtml(request.file);
+              // 新しい文書として同じ表示枠へ読み込み、ページ固有のJavaScriptを毎回初期化する。
+              const pageBlob = new Blob([html], { type: 'text/html;charset=utf-8' });
+              const pageUrl = URL.createObjectURL(pageBlob);
+              // HTMLへスクリプトを挿入せず、URLフラグメントで安全に目的位置へ移動する。
+              const destinationUrl = request.fragment ? `${pageUrl}${request.fragment}` : pageUrl;
+              window.location.replace(destinationUrl);"""
+
+          changed = []
+          for path in sorted(Path('.').glob('*.html')):
+              original = path.read_text(encoding='utf-8')
+              updated, removed = function_pattern.subn('\n', original, count=1)
+              if old_navigation not in updated:
+                  raise SystemExit(f'Navigation block not found in {path.name}')
+              updated = updated.replace(old_navigation, new_navigation, 1)
+              if updated != original:
+                  path.write_text(updated, encoding='utf-8')
+                  changed.append(path.name)
+
+          expected = {'index.html', 'p.html', 's.html', 'd.html', 'de.html'}
+          if set(changed) != expected:
+              raise SystemExit(f'Unexpected changed files: {changed}')
+
+          print('Updated:', ', '.join(changed))
+          PY
+
+      - name: Commit fix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- '*.html'
+          git commit -m "Fix sidebar return navigation corruption"
+          git push
