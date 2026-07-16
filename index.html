@@ -1132,11 +1132,12 @@
         const overlay = showLoading();
         try {
             let html = await fetchPageHtml(request.file);
-            html = addInitialScroll(html, request.fragment);
+            // URLフラグメントを直接使うため、HTMLへのスクリプト挿入は行わない。
             // 新しい文書として同じ表示枠へ読み込み、ページ固有のJavaScriptを毎回初期化する。
             const pageBlob = new Blob([html], { type: 'text/html;charset=utf-8' });
             const pageUrl = URL.createObjectURL(pageBlob);
-            window.location.replace(pageUrl);
+            const destinationUrl = request.fragment ? `${pageUrl}${request.fragment}` : pageUrl;
+    window.location.replace(destinationUrl);
         } catch (error) {
             console.error('Mi-lab internal navigation failed:', error);
             showLoadError(overlay, request.fallbackUrl);
