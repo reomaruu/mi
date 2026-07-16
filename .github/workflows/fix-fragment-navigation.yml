@@ -23,7 +23,7 @@ jobs:
           import re
 
           function_pattern = re.compile(
-              r"\n[ \t]*function addInitialScroll\(html, fragment\) \{.*?\n[ \t]*\}\n(?=[ \t]*async function loadInternalPage)",
+              r"\n[ \t]*function addInitialScroll\(html, fragment\) \{.*?\n[ \t]*\}\n(?:[ \t]*\n)*(?=[ \t]*async function loadInternalPage)",
               re.DOTALL,
           )
 
