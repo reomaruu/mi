@@ -16,50 +16,27 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Remove injected scroll script and use URL fragments
+      - name: Use URL fragments instead of injected scripts
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import re
-
-          function_pattern = re.compile(
-              r"\n[ \t]*function addInitialScroll\(html, fragment\) \{.*?\n[ \t]*\}\n(?:[ \t]*\n)*(?=[ \t]*async function loadInternalPage)",
-              re.DOTALL,
-          )
-
-          navigation_pattern = re.compile(
-              r"(?P<indent>^[ \t]*)let html = await fetchPageHtml\(request\.file\);\s*"
-              r"^[ \t]*html = addInitialScroll\(html, request\.fragment\);\s*"
-              r"^[ \t]*// 新しい文書として同じ表示枠へ読み込み、ページ固有のJavaScriptを毎回初期化する。\s*"
-              r"^[ \t]*const pageBlob = new Blob\(\[html\], \{ type: 'text/html;charset=utf-8' \}\);\s*"
-              r"^[ \t]*const pageUrl = URL\.createObjectURL\(pageBlob\);\s*"
-              r"^[ \t]*window\.location\.replace\(pageUrl\);",
-              re.MULTILINE,
-          )
-
-          def replacement(match):
-              i = match.group('indent')
-              return (
-                  f"{i}const html = await fetchPageHtml(request.file);\n"
-                  f"{i}// 新しい文書として同じ表示枠へ読み込み、ページ固有のJavaScriptを毎回初期化する。\n"
-                  f"{i}const pageBlob = new Blob([html], {{ type: 'text/html;charset=utf-8' }});\n"
-                  f"{i}const pageUrl = URL.createObjectURL(pageBlob);\n"
-                  f"{i}// HTMLへスクリプトを挿入せず、URLフラグメントで安全に目的位置へ移動する。\n"
-                  f"{i}const destinationUrl = request.fragment ? `${{pageUrl}}${{request.fragment}}` : pageUrl;\n"
-                  f"{i}window.location.replace(destinationUrl);"
-              )
 
           changed = []
           for path in sorted(Path('.').glob('*.html')):
               original = path.read_text(encoding='utf-8')
-              updated, function_count = function_pattern.subn('\n', original, count=1)
-              updated, navigation_count = navigation_pattern.subn(replacement, updated, count=1)
+              updated = original
 
-              if function_count != 1 or navigation_count != 1:
-                  raise SystemExit(
-                      f'Expected one function and one navigation replacement in {path.name}; '
-                      f'got function={function_count}, navigation={navigation_count}'
-                  )
+              call = "html = addInitialScroll(html, request.fragment);"
+              if call not in updated:
+                  raise SystemExit(f'Scroll injection call not found in {path.name}')
+              updated = updated.replace(call, "// URLフラグメントを直接使うため、HTMLへのスクリプト挿入は行わない。", 1)
+
+              old_replace = "window.location.replace(pageUrl);"
+              new_replace = """const destinationUrl = request.fragment ? `${pageUrl}${request.fragment}` : pageUrl;
+              window.location.replace(destinationUrl);"""
+              if old_replace not in updated:
+                  raise SystemExit(f'Page replacement call not found in {path.name}')
+              updated = updated.replace(old_replace, new_replace, 1)
 
               path.write_text(updated, encoding='utf-8')
               changed.append(path.name)
