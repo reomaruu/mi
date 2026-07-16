@@ -23,35 +23,46 @@ jobs:
           import re
 
           function_pattern = re.compile(
-              r"\n\s*function addInitialScroll\(html, fragment\) \{.*?\n\s*\}\n(?=\s*async function loadInternalPage)",
+              r"\n[ \t]*function addInitialScroll\(html, fragment\) \{.*?\n[ \t]*\}\n(?=[ \t]*async function loadInternalPage)",
               re.DOTALL,
           )
 
-          old_navigation = """            let html = await fetchPageHtml(request.file);
-              html = addInitialScroll(html, request.fragment);
-              // 新しい文書として同じ表示枠へ読み込み、ページ固有のJavaScriptを毎回初期化する。
-              const pageBlob = new Blob([html], { type: 'text/html;charset=utf-8' });
-              const pageUrl = URL.createObjectURL(pageBlob);
-              window.location.replace(pageUrl);"""
+          navigation_pattern = re.compile(
+              r"(?P<indent>^[ \t]*)let html = await fetchPageHtml\(request\.file\);\s*"
+              r"^[ \t]*html = addInitialScroll\(html, request\.fragment\);\s*"
+              r"^[ \t]*// 新しい文書として同じ表示枠へ読み込み、ページ固有のJavaScriptを毎回初期化する。\s*"
+              r"^[ \t]*const pageBlob = new Blob\(\[html\], \{ type: 'text/html;charset=utf-8' \}\);\s*"
+              r"^[ \t]*const pageUrl = URL\.createObjectURL\(pageBlob\);\s*"
+              r"^[ \t]*window\.location\.replace\(pageUrl\);",
+              re.MULTILINE,
+          )
 
-          new_navigation = """            const html = await fetchPageHtml(request.file);
-              // 新しい文書として同じ表示枠へ読み込み、ページ固有のJavaScriptを毎回初期化する。
-              const pageBlob = new Blob([html], { type: 'text/html;charset=utf-8' });
-              const pageUrl = URL.createObjectURL(pageBlob);
-              // HTMLへスクリプトを挿入せず、URLフラグメントで安全に目的位置へ移動する。
-              const destinationUrl = request.fragment ? `${pageUrl}${request.fragment}` : pageUrl;
-              window.location.replace(destinationUrl);"""
+          def replacement(match):
+              i = match.group('indent')
+              return (
+                  f"{i}const html = await fetchPageHtml(request.file);\n"
+                  f"{i}// 新しい文書として同じ表示枠へ読み込み、ページ固有のJavaScriptを毎回初期化する。\n"
+                  f"{i}const pageBlob = new Blob([html], {{ type: 'text/html;charset=utf-8' }});\n"
+                  f"{i}const pageUrl = URL.createObjectURL(pageBlob);\n"
+                  f"{i}// HTMLへスクリプトを挿入せず、URLフラグメントで安全に目的位置へ移動する。\n"
+                  f"{i}const destinationUrl = request.fragment ? `${{pageUrl}}${{request.fragment}}` : pageUrl;\n"
+                  f"{i}window.location.replace(destinationUrl);"
+              )
 
           changed = []
           for path in sorted(Path('.').glob('*.html')):
               original = path.read_text(encoding='utf-8')
-              updated, removed = function_pattern.subn('\n', original, count=1)
-              if old_navigation not in updated:
-                  raise SystemExit(f'Navigation block not found in {path.name}')
-              updated = updated.replace(old_navigation, new_navigation, 1)
-              if updated != original:
-                  path.write_text(updated, encoding='utf-8')
-                  changed.append(path.name)
+              updated, function_count = function_pattern.subn('\n', original, count=1)
+              updated, navigation_count = navigation_pattern.subn(replacement, updated, count=1)
+
+              if function_count != 1 or navigation_count != 1:
+                  raise SystemExit(
+                      f'Expected one function and one navigation replacement in {path.name}; '
+                      f'got function={function_count}, navigation={navigation_count}'
+                  )
+
+              path.write_text(updated, encoding='utf-8')
+              changed.append(path.name)
 
           expected = {'index.html', 'p.html', 's.html', 'd.html', 'de.html'}
           if set(changed) != expected:
